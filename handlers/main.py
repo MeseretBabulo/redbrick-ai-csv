@@ -14,14 +14,9 @@ csv_dir_archive = "csv/archive"
 # If INPUT_BUCKET/OUTPUT_BUCKET are not set, local folders are used.
 INPUT_BUCKET = os.getenv("INPUT_BUCKET", "").strip()
 OUTPUT_BUCKET = os.getenv("OUTPUT_BUCKET", "").strip()
-INPUT_PREFIX = os.getenv("INPUT_PREFIX", "").strip("/")  # e.g. input-json
-OUTPUT_PREFIX = os.getenv("OUTPUT_PREFIX", "").strip("/")  # e.g. output-csv
+INPUT_PREFIX = os.getenv("INPUT_PREFIX", "").strip("/")  
+OUTPUT_PREFIX = os.getenv("OUTPUT_PREFIX", "").strip("/")  
 PROJECT_FOLDER_NAME = os.getenv("PROJECT_FOLDER_NAME", "").strip()
-
-
-# Keep one-task behavior
-TARGET_TASK_ID = "bb409331-45a0-487c-b8f4-0dd5bdd4211d"  # Set None to use index
-TARGET_TASK_INDEX = 0
 
 
 def empty_data(row):
@@ -443,25 +438,6 @@ def run_json():
     return rows
 
 
-def select_single_task(df):
-    """Return exactly one task row from the input dataframe."""
-    if df.empty:
-        return df
-
-    if TARGET_TASK_ID:
-        matched = df[df["taskId"] == TARGET_TASK_ID]
-        if not matched.empty:
-            return matched.head(1)
-        print(f"[WARN] TARGET_TASK_ID not found: {TARGET_TASK_ID}. Falling back to index.")
-
-    idx = TARGET_TASK_INDEX
-    if idx < 0 or idx >= len(df):
-        print(f"[WARN] TARGET_TASK_INDEX {idx} out of range. Falling back to first task.")
-        idx = 0
-    return df.iloc[[idx]]
-
-
-
 def main():
     if not OUTPUT_BUCKET:
         os.makedirs(csv_dir, exist_ok=True)
@@ -474,15 +450,14 @@ def main():
         filename = build_output_filename(row["name"])
         output_path = os.path.join(csv_dir, filename)
 
-        one_task_df = select_single_task(row["df"])
-        if one_task_df.empty:
-            print(f"[WARN] No task selected from file: {row['name']}")
+        full_df = row["df"]
+        if full_df.empty:
+            print(f"[WARN] No tasks found in file: {row['name']}")
             continue
 
-        selected_task_id = one_task_df.iloc[0].get("taskId", "----")
-        print(f"[INFO] Processing one task only: {selected_task_id}")
+        print(f"[INFO] Processing all tasks from file: {row['name']}")
 
-        new_df = recreate_new_dataframe(one_task_df)
+        new_df = recreate_new_dataframe(full_df)
         if output_bucket:
             output_blob_name = f"{OUTPUT_PREFIX}/{filename}" if OUTPUT_PREFIX else filename
             output_blob = output_bucket.blob(output_blob_name)
