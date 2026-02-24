@@ -16,6 +16,7 @@ INPUT_BUCKET = os.getenv("INPUT_BUCKET", "").strip()
 OUTPUT_BUCKET = os.getenv("OUTPUT_BUCKET", "").strip()
 INPUT_PREFIX = os.getenv("INPUT_PREFIX", "").strip("/")  # e.g. input-json
 OUTPUT_PREFIX = os.getenv("OUTPUT_PREFIX", "").strip("/")  # e.g. output-csv
+PROJECT_FOLDER_NAME = os.getenv("PROJECT_FOLDER_NAME", "").strip()
 
 
 # Keep one-task behavior
@@ -405,6 +406,26 @@ def read_json_to_df(path):
         content = blob.download_as_text()
         return pd.read_json(StringIO(content))
     return pd.read_json(path)
+
+
+def build_output_filename(source_path):
+    """Build output CSV name using project folder + date + source file name."""
+    date_str = datetime.utcnow().strftime("%Y%m%d")
+    source_name = os.path.splitext(os.path.basename(source_path))[0]
+
+    if PROJECT_FOLDER_NAME:
+        project_folder = PROJECT_FOLDER_NAME
+    else:
+        normalized = source_path.replace("\\", "/").strip("/")
+        parts = normalized.split("/")
+        if source_path.startswith("gs://"):
+            # gs://bucket/folder/file.json -> folder name if present
+            project_folder = parts[-2] if len(parts) >= 4 else "project"
+        else:
+            # local: path/to/folder/file.json -> folder name if present
+            project_folder = parts[-2] if len(parts) >= 2 else "project"
+
+    return f"{project_folder}_{date_str}_{source_name}.csv"
     
 
 def run_json():
@@ -450,8 +471,7 @@ def main():
     output_bucket = storage_client.bucket(OUTPUT_BUCKET) if OUTPUT_BUCKET else None
 
     for row in rows:
-        base_name = os.path.basename(row["name"])
-        filename = os.path.splitext(base_name)[0] + '.csv'
+        filename = build_output_filename(row["name"])
         output_path = os.path.join(csv_dir, filename)
 
         one_task_df = select_single_task(row["df"])
