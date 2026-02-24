@@ -19,14 +19,14 @@ steps:
         "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$SHORT_SHA",
       ]
 
-  # 3) Create Cloud Run Job (ONLY once)
+  # 3) Create or update Cloud Run Job
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: "gcloud"
     args:
       [
         "run",
         "jobs",
-        "create",
+        "deploy",
         "${_JOB}",
         "--image",
         "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$SHORT_SHA",
@@ -45,7 +45,7 @@ options:
 
 substitutions:
   _REGION: "us-central1"
-  _REPO: "redbrick-ai-csv"
+  _REPO: "report-csv"
   _IMAGE: "report-csv"
   _JOB: "report-csv"
   _RUNTIME_SA: "1009801181893-compute@developer.gserviceaccount.com"
