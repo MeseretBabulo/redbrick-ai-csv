@@ -45,7 +45,7 @@ options:
 
 substitutions:
   _REGION: "us-central1"
-  _REPO: "report-csv-repo"
+  _REPO: "redbrick-ai-csv"
   _IMAGE: "report-csv"
   _JOB: "report-csv"
   _RUNTIME_SA: "1009801181893-compute@developer.gserviceaccount.com"
