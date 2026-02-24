@@ -34,6 +34,22 @@ steps:
         "${_REGION}",
         "--service-account",
         "${_RUNTIME_SA}",
+        "--set-env-vars",
+        "INPUT_BUCKET=${_INPUT_BUCKET},OUTPUT_BUCKET=${_OUTPUT_BUCKET}",
+      ]
+
+  # 4) Execute Cloud Run Job
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "gcloud"
+    args:
+      [
+        "run",
+        "jobs",
+        "execute",
+        "${_JOB}",
+        "--region",
+        "${_REGION}",
+        "--wait",
       ]
 
 images:
@@ -49,3 +65,5 @@ substitutions:
   _IMAGE: "report-csv"
   _JOB: "report-csv"
   _RUNTIME_SA: "1009801181893-compute@developer.gserviceaccount.com"
+  _INPUT_BUCKET: "redbrick-json-input"
+  _OUTPUT_BUCKET: "redbrick-csv-output"
