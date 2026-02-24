@@ -1,0 +1,58 @@
+# Cloud Build steps run in order
+
+steps:
+  # 1) Build Docker image from Dockerfile
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest",
+        ".",
+      ]
+
+  # 2) Push image to Artifact Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest",
+      ]
+
+  # 3) Create Cloud Run Job (ONLY once)
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "gcloud"
+    args:
+      [
+        "run",
+        "jobs",
+        "create",
+        "${_JOB}",
+        "--image",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest",
+        "--region",
+        "${_REGION}",
+        "--service-account",
+        "${_RUNTIME_SA}",
+        # Optional: set env vars if your script uses them
+        # "--set-env-vars", "INPUT_DIR=/app/json,OUTPUT_DIR=/app/csv",
+        # Optional: increase resources if needed
+        # "--memory", "2Gi",
+        # "--cpu", "1",
+        # Optional: set timeout
+        # "--task-timeout", "3600s",
+      ]
+
+images:
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+
+substitutions:
+  _REGION: "us-central1"
+  _REPO: "report-csv-repo"
+  _IMAGE: "report-csv"
+  _JOB: "report-csv"
+  _RUNTIME_SA: "redbrick-assistant@stoked-mode-339213.iam.gserviceaccount.com"
