@@ -7,7 +7,7 @@ steps:
       [
         "build",
         "-t",
-        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$SHORT_SHA",
         ".",
       ]
 
@@ -16,7 +16,7 @@ steps:
     args:
       [
         "push",
-        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$SHORT_SHA",
       ]
 
   # 3) Create Cloud Run Job (ONLY once)
@@ -29,22 +29,15 @@ steps:
         "create",
         "${_JOB}",
         "--image",
-        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$SHORT_SHA",
         "--region",
         "${_REGION}",
         "--service-account",
         "${_RUNTIME_SA}",
-        # Optional: set env vars if your script uses them
-        # "--set-env-vars", "INPUT_DIR=/app/json,OUTPUT_DIR=/app/csv",
-        # Optional: increase resources if needed
-        # "--memory", "2Gi",
-        # "--cpu", "1",
-        # Optional: set timeout
-        # "--task-timeout", "3600s",
       ]
 
 images:
-  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:latest"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:$SHORT_SHA"
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -55,4 +48,4 @@ substitutions:
   _REPO: "report-csv-repo"
   _IMAGE: "report-csv"
   _JOB: "report-csv"
-  _RUNTIME_SA: "redbrick-assistant@stoked-mode-339213.iam.gserviceaccount.com"
+  _RUNTIME_SA: "1009801181893-compute@developer.gserviceaccount.com"
